@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">GuessArtist</string>
+    <string name="new_game">New Game</string>
+    <string name="game_finished">Game Finished</string>
+    <string name="score_result">Score Result</string>
+    <string name="high_score">High Score</string>
 </resources>

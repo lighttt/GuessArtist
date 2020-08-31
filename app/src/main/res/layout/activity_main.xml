@@ -6,61 +6,57 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/horizontalHalf"
+
+    <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.5"
-        app:layout_editor_absoluteX="0dp"
-        app:layout_editor_absoluteY="256dp"/>
-
-    <Button
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:id="@+id/buttonA"
-        app:layout_constraintHorizontal_chainStyle="spread_inside"
-        app:layout_constraintBottom_toTopOf="@id/buttonC"
-        app:layout_constraintRight_toLeftOf="@id/buttonB"
-        app:layout_constraintTop_toTopOf="@id/horizontalHalf"
-        app:layout_constraintLeft_toLeftOf="parent"/>
-
-    <Button
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:id="@+id/buttonC"
-        app:layout_constraintTop_toBottomOf="@id/buttonA"
-        app:layout_constraintRight_toLeftOf="@id/buttonD"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"/>
-
-    <Button
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:id="@+id/buttonB"
-        app:layout_constraintTop_toTopOf="@id/horizontalHalf"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintLeft_toRightOf="@+id/buttonA"
-        app:layout_constraintBottom_toTopOf="@id/buttonD"
-        />
-
-    <Button
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:id="@+id/buttonD"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toRightOf="@id/buttonC"
-        app:layout_constraintTop_toBottomOf="@id/buttonB"
-        app:layout_constraintRight_toRightOf="parent"/>
-
-    <ImageView
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:id="@+id/button"
         android:layout_margin="8dp"
-        android:adjustViewBounds="true"
-        app:layout_constraintBottom_toTopOf="@id/horizontalHalf"
-        app:layout_constraintLeft_toLeftOf="parent"
+        android:onClick="newGame"
+        android:text="@string/new_game"
+        app:layout_constraintVertical_bias="0.501"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintLeft_toLeftOf="parent"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/highScoreTV"
+        android:layout_margin="8dp"
+        android:text="@string/high_score"
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/button"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/gameResult"
+        android:text="@string/game_finished"
+        android:visibility="gone"
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+        app:layout_constraintBottom_toTopOf="@id/button"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"/>
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/resultScore"
+        android:text="@string/score_result"
+        android:visibility="gone"
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/highScoreTV"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"/>
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
