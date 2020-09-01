@@ -2,6 +2,8 @@ package np.com.manishtuladhar.guessartist;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.JsonReader;
 import android.widget.Toast;
@@ -17,38 +19,54 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-public class Sample {
-    private  int mSampleId;
+public class Song {
+    private  int mSongId;
     private String mArtist;
     private String mTitle;
     private String mUri;
     private String mAlbumArtId;
 
-    public Sample(int mSampleId, String mArtist, String mTitle, String mUri, String mAlbumArtId) {
-        this.mSampleId = mSampleId;
+    public Song(int mSongId, String mArtist, String mTitle, String mUri, String mAlbumArtId) {
+        this.mSongId = mSongId;
         this.mArtist = mArtist;
         this.mTitle = mTitle;
         this.mUri = mUri;
         this.mAlbumArtId = mAlbumArtId;
     }
 
+
+    // =========================== ALBUM ART FUNCTIONS  ============================
+
+    public static Bitmap getAlbumArtBySongId(Context context,int songId)
+    {
+        Song song = Song.getSongById(context,songId);
+        int albumArtId = context.getResources().getIdentifier(
+                song !=null ? song.getAlbumArtId() : null,
+                "drawable",
+                context.getPackageName()
+        );
+        return BitmapFactory.decodeResource(context.getResources(),albumArtId);
+    }
+
+    // =========================== SONG FUNCTIONS  ============================
+
     /**
      * Get the details of the song by id
      */
-    public static Sample getSampleById(Context context,int sampleId)
+    public static Song getSongById(Context context, int songId)
     {
         JsonReader reader;
-        ArrayList<Integer> sampleIds = new ArrayList<>();
+        ArrayList<Integer> songIds = new ArrayList<>();
         try{
           reader = readJsonFile(context);
           reader.beginArray();
           while (reader.hasNext())
           {
-              Sample currentSample = readEntry(reader);
-              if(currentSample.getSampleId() == sampleId)
+              Song currentSong = readEntry(reader);
+              if(currentSong.getSongId() == songId)
               {
                   reader.close();
-                  return currentSample;
+                  return currentSong;
               }
           }
         }
@@ -57,7 +75,33 @@ public class Sample {
             e.printStackTrace();
         }
         return null;
+    }/**/
+
+
+    /**
+     * Retrieves the ids of all the songs
+     */
+    public static ArrayList<Integer> getAllSongIds(Context context)
+    {
+        JsonReader reader;
+        ArrayList<Integer> songIds = new ArrayList<>();
+        try{
+            reader = readJsonFile(context);
+            reader.beginArray();
+            while (reader.hasNext())
+            {
+                songIds.add(readEntry(reader).getSongId());
+            }
+            reader.close();
+        }
+        catch (IOException ex)
+        {
+            ex.printStackTrace();
+        }
+        return songIds;
     }
+
+    // =========================== JSON FUNCTIONS   ============================
 
     /**
      * Reading the json file for sample of songs
@@ -100,7 +144,7 @@ public class Sample {
     /**
      * Read the json objects and create sample object for each
      */
-    private static Sample readEntry(JsonReader reader)
+    private static Song readEntry(JsonReader reader)
     {
         Integer id = -1;
         String artist = null;
@@ -139,16 +183,18 @@ public class Sample {
         {
             e.printStackTrace();
         }
-        return new Sample(id,artist,title,uri,albumArtID);
+        return new Song(id,artist,title,uri,albumArtID);
     }
 
 
-    public int getSampleId() {
-        return mSampleId;
+
+    // =========================== GETTER AND SETTER   ============================
+    public int getSongId() {
+        return mSongId;
     }
 
-    public void setSampleId(int mSampleId) {
-        this.mSampleId = mSampleId;
+    public void setSongId(int mSongId) {
+        this.mSongId = mSongId;
     }
 
     public String getArtist() {
