@@ -37,7 +37,7 @@ public class Song {
 
     // =========================== ALBUM ART FUNCTIONS  ============================
 
-    public static Bitmap getAlbumArtBySongId(Context context,int songId)
+    public static int getAlbumArtBySongId(Context context,int songId)
     {
         Song song = Song.getSongById(context,songId);
         int albumArtId = context.getResources().getIdentifier(
@@ -45,7 +45,8 @@ public class Song {
                 "drawable",
                 context.getPackageName()
         );
-        return BitmapFactory.decodeResource(context.getResources(),albumArtId);
+//        return BitmapFactory.decodeResource(context.getResources(),albumArtId);
+        return albumArtId;
     }
 
     // =========================== SONG FUNCTIONS  ============================

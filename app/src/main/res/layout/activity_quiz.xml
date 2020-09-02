@@ -53,16 +53,16 @@
         app:layout_constraintTop_toBottomOf="@id/buttonB"
         app:layout_constraintRight_toRightOf="parent"/>
 
-    <ImageView
-        android:id="@+id/artistIV"
-        android:layout_width="0dp"
+    <com.google.android.exoplayer2.ui.PlayerView
+        android:id="@+id/playerView"
+        app:use_artwork="true"
+        app:default_artwork="@drawable/ic_question"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_margin="8dp"
-        android:adjustViewBounds="true"
+        app:controller_layout_id="@layout/exo_playcontrol_view"
         app:layout_constraintBottom_toTopOf="@id/horizontalHalf"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:src="@drawable/ic_question"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
