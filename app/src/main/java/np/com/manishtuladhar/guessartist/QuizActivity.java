@@ -1,15 +1,26 @@
 package np.com.manishtuladhar.guessartist;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.media.session.MediaButtonReceiver;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.media.session.MediaSession;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -53,13 +64,19 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
     //intents
     private static final String REMAINING_SONGS_KEY = "remaining_songs";
 
+    //session
+    private static MediaSessionCompat mMediaSession;
+    private PlaybackStateCompat.Builder mStateBuilder;
+    NotificationChannel channel;
+    NotificationManager notificationManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quiz);
 
         mPlayerView = findViewById(R.id.playerView);
-
+        createNotificationChannel();
 
         //check whether its the new game
         boolean isNewGame = !getIntent().hasExtra(REMAINING_SONGS_KEY);
@@ -99,6 +116,9 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
         //add button with their question title
         mButtons = initializeButtons(mQuestionsSongIds);
 
+        //media session
+        initializeMediaSession();
+
         //initialize songs and playerview
         Song answerSong = Song.getSongById(this, mCorrectSongId);
         if (answerSong == null) {
@@ -106,7 +126,140 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
         initializePlayer(Uri.parse(answerSong.getUri()));
+
     }
+
+    // ================== PLAYBACK SESSION ==============================
+
+    /**
+     * Initialize Media Session
+     */
+    private void initializeMediaSession() {
+        //create
+        mMediaSession = new MediaSessionCompat(this, TAG);
+
+        //enable callbacks for media buttons and transport control
+        mMediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
+                MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+
+        //do not restart media session if app is not visible
+        mMediaSession.setMediaButtonReceiver(null);
+
+        //playback state
+        mStateBuilder = new PlaybackStateCompat.Builder()
+                .setActions(
+                        PlaybackStateCompat.ACTION_PLAY |
+                                PlaybackStateCompat.ACTION_PAUSE |
+                                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
+                                PlaybackStateCompat.ACTION_PLAY_PAUSE
+                );
+        mMediaSession.setPlaybackState(mStateBuilder.build());
+
+        // callbacks
+        mMediaSession.setCallback(new MySessionCallback());
+
+        //active or start the session
+        mMediaSession.setActive(true);
+    }
+
+    // ====================== MEDIA NOTIFICATION =========================
+
+    /**
+     * Create notification channel
+     */
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            channel = new NotificationChannel("media_notify", "media_notify",
+                    NotificationManager.IMPORTANCE_DEFAULT);
+            notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    /**
+     * Show and build notification channel
+     */
+    private void showNotification(PlaybackStateCompat state) {
+
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "media_notify");
+
+        int icon;
+        String play_pause;
+        if (state.getState() == PlaybackStateCompat.STATE_PLAYING) {
+            icon = R.drawable.exo_controls_pause;
+            play_pause = "Pause";
+        } else {
+            icon = R.drawable.exo_controls_play;
+            play_pause = "Play";
+        }
+
+        NotificationCompat.Action playPauseAction = new NotificationCompat.Action(
+                icon, play_pause,
+                MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_PLAY_PAUSE));
+
+        NotificationCompat.Action restartAction = new NotificationCompat.Action(
+                R.drawable.exo_controls_previous, "Restart",
+                MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS));
+
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,
+                0,
+                new Intent(this, QuizActivity.class),
+                0);
+
+        builder.setContentTitle("Guess the Artist")
+                .setContentText("Press play to hear the song")
+                .setContentIntent(pendingIntent)
+                .setSmallIcon(R.drawable.ic_music)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .addAction(restartAction)
+                .addAction(playPauseAction)
+                .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
+                .setMediaSession(mMediaSession.getSessionToken())
+                .setShowActionsInCompactView(0,1));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            notificationManager = getSystemService(NotificationManager.class);
+        }
+        else{
+            notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        }
+        notificationManager.notify(0,builder.build());
+
+    }
+
+    // ====================== BROADCAST RECEIVER =========================
+    public static class MediaReceiver extends BroadcastReceiver{
+        public MediaReceiver()
+        {
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            MediaButtonReceiver.handleIntent(mMediaSession,intent);
+        }
+    }
+
+    // ====================== CALLBACK CLASS =========================
+
+    private class MySessionCallback extends MediaSessionCompat.Callback {
+        @Override
+        public void onPlay() {
+            mExoPlayer.setPlayWhenReady(true);
+        }
+
+        @Override
+        public void onPause() {
+            mExoPlayer.setPlayWhenReady(false);
+        }
+
+        @Override
+        public void onSkipToPrevious() {
+            mExoPlayer.seekTo(0);
+        }
+    }
+
 
     // ====================== EVENT FUNCTIONS =========================
 
@@ -124,13 +277,15 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-        if(playbackState == ExoPlayer.STATE_READY && playWhenReady)
-        {
-            Log.e(TAG, "onPlayerStateChanged: PLAYING" );
+        if (playbackState == ExoPlayer.STATE_READY && playWhenReady) {
+            mStateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,
+                    mExoPlayer.getContentPosition(), 1f);
+        } else if (playbackState == ExoPlayer.STATE_READY) {
+            mStateBuilder.setState(PlaybackStateCompat.STATE_PAUSED,
+                    mExoPlayer.getContentPosition(), 1f);
         }
-        else if(playbackState == ExoPlayer.STATE_READY){
-            Log.e(TAG, "onPlayerStateChanged: PAUSED" );
-        }
+        mMediaSession.setPlaybackState(mStateBuilder.build());
+        showNotification(mStateBuilder.build());
     }
 
     @Override
@@ -156,7 +311,7 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
             mExoPlayer.addListener(this);
 
             //media source
-            String userAgent = Util.getUserAgent(this,"GuessArtist");
+            String userAgent = Util.getUserAgent(this, "GuessArtist");
             DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this,
                     userAgent);
             MediaSource mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
@@ -169,8 +324,8 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * Release Exoplayer
      */
-    private void releasePlayer()
-    {
+    private void releasePlayer() {
+        notificationManager.cancelAll();
         mExoPlayer.stop();
         mExoPlayer.release();
         mExoPlayer = null;
@@ -180,6 +335,7 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
         releasePlayer();
+        mMediaSession.setActive(false);
     }
 
     // ====================== VIEW FUNCTIONS =========================
